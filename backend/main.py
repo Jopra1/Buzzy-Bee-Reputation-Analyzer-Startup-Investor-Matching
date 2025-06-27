@@ -2,7 +2,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from services.twitter_service import fetch_tweets
 from services.news_service import fetch_gnews_data, fetch_newsapi_data
-from analyzers.openrouter_sentiment import analyze_sentiment
+#from analyzers.openrouter_sentiment import analyze_sentiment
+from analyzers.local_sentiment import analyze_sentiment
 
 from database import company_collection  # ✅ Use your DB connection
 
@@ -45,6 +46,7 @@ async def analyze(request: Request):
     try:
         # Fetch data from all sources
         # tweets = fetch_tweets(query)  # Uncomment when Twitter API is ready
+        """
         if company_data["isStartup"]:
             existing = company_collection.find_one({"companyName": query})
             if not existing:
@@ -52,7 +54,7 @@ async def analyze(request: Request):
                 print(f"Inserted startup company '{query}' into DB.")
             else:
                 print(f"Startup '{query}' already exists in DB.")
-
+"""
         gnews = fetch_gnews_data(query).get("results", [])
         newsapi = fetch_newsapi_data(query).get("results", [])
 

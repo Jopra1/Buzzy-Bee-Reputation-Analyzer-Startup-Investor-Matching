@@ -4,3 +4,5 @@ requests
 openai
 pymongo[srv]
 pydantic
+transformers
+torch
