@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request
 from services.twitter_service import fetch_tweets
 from services.news_service import fetch_gnews_data, fetch_newsapi_data
-from analyzers.gpt_sentiment import analyze_sentiment
+#from analyzers.gpt_sentiment import analyze_sentiment
+from analyzers.deepseek_sentiment import analyze_sentiment
 
 app = FastAPI()
 
@@ -26,6 +27,6 @@ async def analyze(request: Request):
 
     # Pass all data to GPT
     print("Combined: ", combined_texts)
-    #result = analyze_sentiment(combined_texts)
+    result = analyze_sentiment(combined_texts)
 
-    #return {"result": result}
+    return {"result": result}
