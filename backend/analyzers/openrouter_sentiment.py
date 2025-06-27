@@ -1,119 +1,112 @@
-from openai import OpenAI
-from config import OPENROUTER_API_KEY
+import requests
 import json
+import re
+from config import GEMINI_API_KEY
 
-client = OpenAI(
-  base_url="https://openrouter.ai/api/v1",
-  api_key=OPENROUTER_API_KEY,
-)
+def extract_json(text):
+    """Extract JSON from markdown blocks"""
+    match = re.search(r'```(?:json)?\n(.*?)\n```', text, re.DOTALL)
+    return match.group(1).strip() if match else text
 
-def analyze_sentiment(text_list, company_data=None):
-    # Join list into a single string if needed
-    if isinstance(text_list, list):
-        text = "\n".join(text_list)
-    else:
-        text = str(text_list)
-
-    # Build company context string
-    company_context = ""
-    if company_data:
-        company_context = f"""
-        
-COMPANY INFORMATION:
-- Company Name: {company_data.get('companyName', 'N/A')}
-- CEO: {company_data.get('ceo', 'N/A')}
-- Country: {company_data.get('country', 'N/A')}
-- Sector: {company_data.get('sector', 'N/A')}
-- Revenue: {company_data.get('revenue', 'N/A')} USD
-- Number of Employees: {company_data.get('employees', 'N/A')}
-- Year Established: {company_data.get('year', 'N/A')}
-- Stock Ticker: {company_data.get('ticker', 'N/A' if not company_data.get('ticker') else company_data.get('ticker'))}
-- Publicly Listed: {'Yes' if company_data.get('isPublic') else 'No'}
-- Startup Status: {'Yes' if company_data.get('isStartup') else 'No'}
-- Additional Links: {company_data.get('links', 'N/A')}
-
+def analyze_sentiment(texts, company_data):
+    """Analyze sentiment using Gemini API"""
+    if not texts:
+        return create_empty_response(company_data)
+    
+    # Prepare text content
+    content = "\n".join(texts) if isinstance(texts, list) else str(texts)
+    
+    # Build company context
+    context = f"""
+COMPANY: {company_data.get('companyName', 'N/A')}
+CEO: {company_data.get('ceo', 'N/A')}
+SECTOR: {company_data.get('sector', 'N/A')}
+COUNTRY: {company_data.get('country', 'N/A')}
 """
 
     prompt = f"""
-You are an advanced AI-powered reputation analysis engine specialized in business intelligence and corporate reputation management.
+{context}
 
-{company_context}
+Analyze sentiment for this company from the following content:
+{content}
 
-ANALYSIS TASK:
-Analyze the public sentiment and reputation specifically for the company mentioned above based on the following collection of digital texts from recent news articles, social media posts, and other public commentary:
-
-{text}
-
-IMPORTANT INSTRUCTIONS:
-1. Focus ONLY on content that is directly related to the specified company
-2. Consider the company's sector, size, and business context when providing insights
-3. If the company is a startup, focus on growth potential, innovation, and market entry challenges
-4. If the company is publicly listed, consider stock performance, investor sentiment, and market position
-5. Provide sector-specific insights relevant to their industry
-6. Filter out any content that might be about different companies with similar names
-
-Your goal is to critically evaluate the overall sentiment and reputation, then respond in a structured JSON format with the following keys:
-
-- score: a number from 0 to 100 indicating the company's overall reputation based on sentiment (0 = very negative, 100 = very positive)
-- sentiment: overall tone — either 'positive', 'negative', or 'neutral'
-- most_negative: the most concerning or harmful comment or statement from the input (if any)
-- most_positive: the most favorable or supportive comment or statement from the input (if any)
-- positive_count: total number of clearly positive comments
-- negative_count: total number of clearly negative comments
-- neutral_count: total number of neutral comments
-- confidence_level: how confident you are that the analyzed content is about the specified company (low/medium/high)
-- key_insights: 3-4 critical observations or patterns from the data, considering the company's specific context (e.g., sector trends, startup challenges, public company expectations, regional market factors)
-- sector_specific_analysis: 2-3 insights specifically related to their industry sector and how they compare to industry standards
-- risk_factors: 2-3 potential reputation risks or concerns identified from the analysis
-- opportunities: 2-3 potential opportunities for reputation improvement or growth
-- recommendations: 3-4 strategic and actionable suggestions tailored to this specific company profile to improve or maintain their public reputation
-- next_steps: 2-3 immediate actions the company should consider taking based on this analysis
-- brand_awareness_score: estimated brand awareness percentage (0-100)
-- market_sentiment_score: estimated market sentiment percentage (0-100)
-- public_opinion_score: estimated public opinion percentage (0-100)
-- topic_scores: array of objects with 'topic' and 'score' for key discussion topics
-- trend_data: array of objects with 'day', 'sentiment' and 'mentions' for the last 7 days (simulated based on analysis)
-
-RESPONSE REQUIREMENTS:
-- Provide your full response strictly in valid JSON format
-- Ensure all recommendations are specific to the company's profile (startup vs established, public vs private, sector-specific)
-- If limited relevant content is found, mention this in the confidence_level and adjust insights accordingly
-- Focus on actionable intelligence that considers their business model, market position, and company characteristics
-
+Return ONLY valid JSON with this exact structure:
+{{
+  "score": 0-100,
+  "sentiment": "positive/negative/neutral",
+  "confidence_level": "low/medium/high",
+  "positive_count": integer,
+  "negative_count": integer,
+  "neutral_count": integer,
+  "most_positive": "quote",
+  "most_negative": "quote",
+  "key_insights": ["insight1", "insight2", "insight3"],
+  "recommendations": ["rec1", "rec2", "rec3"],
+  "brand_awareness_score": 0-100,
+  "market_sentiment_score": 0-100,
+  "public_opinion_score": 0-100,
+  "topic_scores": [{{"topic": "leadership", "score": 0-100}}, {{"topic": "innovation", "score": 0-100}}, {{"topic": "financials", "score": 0-100}}],
+  "trend_data": [{{"day": "Day 1", "sentiment": 70, "mentions": 15}}, {{"day": "Day 2", "sentiment": 65, "mentions": 12}}, {{"day": "Day 3", "sentiment": 75, "mentions": 18}}]
+}}
 """
 
-    response = client.chat.completions.create(
-        model="deepseek/deepseek-r1",
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.3
-    )
+    # API call
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    
+    payload = {
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.3, "responseMimeType": "application/json"}
+    }
 
     try:
-        # Parse the JSON response
-        result_json = json.loads(response.choices[0].message.content)
+        response = requests.post(url, headers={"Content-Type": "application/json"}, json=payload)
+        response.raise_for_status()
         
-        # Structure the response to match frontend expectations
-        structured_result = {
-            "company_info": company_data or {},
-            "analysis_result": result_json,
-            "raw_response": response.choices[0].message.content
-        }
+        content = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+        result = json.loads(extract_json(content))
         
-        return structured_result
-    except json.JSONDecodeError as e:
-        print(f"Error parsing JSON response: {e}")
-        print(f"Raw response: {response.choices[0].message.content}")
-        
-        # Return a fallback structure
         return {
-            "company_info": company_data or {},
-            "analysis_result": {
-                "score": 0,
-                "sentiment": "neutral",
-                "error": "Failed to parse analysis response",
-                "raw_response": response.choices[0].message.content
-            },
-            "raw_response": response.choices[0].message.content
+            "company_info": company_data,
+            "analysis_result": result,
+            "status": "success"
         }
+        
+    except Exception as e:
+        print(f"Analysis error: {e}")
+        return {
+            "company_info": company_data,
+            "analysis_result": {"error": str(e)},
+            "status": "error"
+        }
+
+def create_empty_response(company_data):
+    """Create empty response when no data available"""
+    return {
+        "company_info": company_data,
+        "analysis_result": {
+            "score": 50,
+            "sentiment": "neutral",
+            "confidence_level": "low",
+            "positive_count": 0,
+            "negative_count": 0,
+            "neutral_count": 1,
+            "most_positive": "No positive mentions found",
+            "most_negative": "No negative mentions found",
+            "key_insights": ["Limited data available for analysis"],
+            "recommendations": ["Increase online presence", "Monitor brand mentions", "Engage with media"],
+            "brand_awareness_score": 30,
+            "market_sentiment_score": 50,
+            "public_opinion_score": 40,
+            "topic_scores": [
+                {"topic": "leadership", "score": 50},
+                {"topic": "innovation", "score": 50},
+                {"topic": "financials", "score": 50}
+            ],
+            "trend_data": [
+                {"day": "Day 1", "sentiment": 50, "mentions": 0},
+                {"day": "Day 2", "sentiment": 50, "mentions": 0},
+                {"day": "Day 3", "sentiment": 50, "mentions": 0}
+            ]
+        },
+        "status": "no_data"
+    }
