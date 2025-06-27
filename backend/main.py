@@ -4,6 +4,8 @@ from services.twitter_service import fetch_tweets
 from services.news_service import fetch_gnews_data, fetch_newsapi_data
 from analyzers.openrouter_sentiment import analyze_sentiment
 
+from database import company_collection  # ✅ Use your DB connection
+
 app = FastAPI()
 
 # Add CORS middleware to allow frontend requests
@@ -43,6 +45,14 @@ async def analyze(request: Request):
     try:
         # Fetch data from all sources
         # tweets = fetch_tweets(query)  # Uncomment when Twitter API is ready
+        if company_data["isStartup"]:
+            existing = company_collection.find_one({"companyName": query})
+            if not existing:
+                company_collection.insert_one(company_data)
+                print(f"Inserted startup company '{query}' into DB.")
+            else:
+                print(f"Startup '{query}' already exists in DB.")
+
         gnews = fetch_gnews_data(query).get("results", [])
         newsapi = fetch_newsapi_data(query).get("results", [])
 
@@ -91,6 +101,8 @@ async def analyze(request: Request):
         result = analyze_sentiment(relevant_texts, company_data)
 
         print("RESULT:", result)
+
+        
 
         return {"result": result, "company_info": company_data}
         
