@@ -24,13 +24,13 @@ const Header = () => {
           </Typography>
           <Stack direction="row" spacing={2} alignItems="center">
             <Link href="/" color="white" underline="none" sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
-              Home
+              NIL
             </Link>
             <Link href="/startup" color="white" underline="none" sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
-              Startup
+              NIL
             </Link>
             <Link href="/investor" color="white" underline="none" sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
-              Investor
+              NIL
             </Link>
             <MenuIcon sx={{ display: { xs: "block", md: "none" }, color: 'white' }} />
             <Stack direction="row" spacing={1} sx={{ display: { xs: "none", md: "flex" } }}>
@@ -124,7 +124,7 @@ const Header = () => {
                     fontSize: '1rem',
                   }}
                 >
-                  Talk to Sales
+                  Learn More
                 </Button>
               </Stack>
             </Grid>

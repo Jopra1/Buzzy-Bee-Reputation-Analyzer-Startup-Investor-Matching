@@ -18,10 +18,10 @@ import {
   Snackbar,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 import bgImg from "../assets/info-enter-bg.jpg";
 import AnalysisResultsModal from "./AnalysisResultsModal";
 
-// 🎨 Optional: animated or image background container
 const BackgroundWrapper = styled("div")({
   position: "fixed",
   top: 0,
@@ -30,7 +30,7 @@ const BackgroundWrapper = styled("div")({
   width: "100vw",
   background: `url(${bgImg}) center/cover no-repeat`,
   zIndex: -1,
-  filter: "brightness(0.6)", // optional: darken the bg to contrast white text
+  filter: "brightness(0.6)",
 });
 
 const GlassCard = styled(Paper)(({ theme }) => ({
@@ -62,6 +62,8 @@ const sectors = [
 ];
 
 const CompanyForm = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     companyName: "",
     country: "",
@@ -74,6 +76,8 @@ const CompanyForm = () => {
     links: "",
     isPublic: false,
     isStartup: false,
+    pitchDeck: null,
+    contactInfo: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -83,16 +87,16 @@ const CompanyForm = () => {
   const [showResultsModal, setShowResultsModal] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type, checked, files } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : type === "file" ? files[0] : value,
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.companyName.trim()) {
       setError("Company name is required");
       setOpenSnackbar(true);
@@ -104,33 +108,23 @@ const CompanyForm = () => {
     setAnalysisResult(null);
 
     try {
-      // Make API call to backend
+      const payload = { ...formData };
+      delete payload.pitchDeck; // File should be uploaded separately if needed
+
       const response = await fetch("http://localhost:8000/analyze", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      if (data.error) throw new Error(data.error);
 
       setAnalysisResult(data);
-      console.log("Analysis Result:", data);
-      
-      // Show the results modal instead of just logging
       setShowResultsModal(true);
-      
     } catch (err) {
-      console.error("Analysis failed:", err);
       setError(`Analysis failed: ${err.message}`);
       setOpenSnackbar(true);
     } finally {
@@ -138,230 +132,84 @@ const CompanyForm = () => {
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
-  };
-
-  const handleCloseResultsModal = () => {
-    setShowResultsModal(false);
-  };
-
   return (
     <>
       <CssBaseline />
       <BackgroundWrapper />
+
+      {/* 🔙 Back Button */}
+      <Button
+        onClick={() => navigate("/choose-role")}
+        sx={{
+          position: "fixed",
+          top: 16,
+          left: 16,
+          zIndex: 100,
+          bgcolor: "#ff6f00",
+          color: "white",
+          fontWeight: "bold",
+          '&:hover': { bgcolor: "#e65100" },
+        }}
+      >
+        ← Back
+      </Button>
+
       <Container maxWidth="sm" sx={{ mt: 12 }}>
         <GlassCard elevation={5}>
           <Typography variant="h4" align="center" fontWeight="bold" color="orange" gutterBottom>
             Company Information
           </Typography>
 
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 2 }}
-          >
-            <TextField 
-              label="Company Name" 
-              name="companyName" 
-              variant="filled" 
-              required 
-              fullWidth 
-              value={formData.companyName} 
-              onChange={handleChange} 
-              InputLabelProps={{ style: { color: "#fff" } }} 
-              InputProps={{ style: { color: "#fff" } }}
-              disabled={loading}
-            />
-            
-            <TextField 
-              label="CEO Name" 
-              name="ceo" 
-              variant="filled" 
-              required 
-              fullWidth 
-              value={formData.ceo} 
-              onChange={handleChange} 
-              InputLabelProps={{ style: { color: "#fff" } }} 
-              InputProps={{ style: { color: "#fff" } }}
-              disabled={loading}
-            />
-            
-            <TextField 
-              label="Country" 
-              name="country" 
-              variant="filled" 
-              required 
-              fullWidth 
-              value={formData.country} 
-              onChange={handleChange} 
-              InputLabelProps={{ style: { color: "#fff" } }} 
-              InputProps={{ style: { color: "#fff" } }}
-              disabled={loading}
-            />
-            
+          <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 2 }}>
+            <TextField name="companyName" label="Company Name" variant="filled" required fullWidth value={formData.companyName} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
+            <TextField name="ceo" label="CEO Name" variant="filled" required fullWidth value={formData.ceo} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
+            <TextField name="country" label="Country" variant="filled" required fullWidth value={formData.country} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
+
             <FormControl fullWidth variant="filled">
               <InputLabel sx={{ color: "#fff" }}>Sector</InputLabel>
-              <Select
-                name="sector"
-                value={formData.sector}
-                onChange={handleChange}
-                disabled={loading}
-                sx={{
-                  color: "#fff",
-                  maxHeight: 300,
-                  overflowY: "auto",
-                }}
-              >
+              <Select name="sector" value={formData.sector} onChange={handleChange} sx={{ color: "#fff" }} disabled={loading}>
                 {sectors.map((sector, idx) => (
-                  <MenuItem key={idx} value={sector}>
-                    {sector}
-                  </MenuItem>
+                  <MenuItem key={idx} value={sector}>{sector}</MenuItem>
                 ))}
               </Select>
             </FormControl>
-            
-            <TextField 
-              label="Revenue (USD)" 
-              name="revenue" 
-              variant="filled" 
-              required 
-              fullWidth 
-              value={formData.revenue} 
-              onChange={handleChange} 
-              InputLabelProps={{ style: { color: "#fff" } }} 
-              InputProps={{ style: { color: "#fff" } }}
-              disabled={loading}
-            />
-            
-            <TextField 
-              label="Number of Employees" 
-              name="employees" 
-              variant="filled" 
-              required 
-              fullWidth 
-              value={formData.employees} 
-              onChange={handleChange} 
-              InputLabelProps={{ style: { color: "#fff" } }} 
-              InputProps={{ style: { color: "#fff" } }}
-              disabled={loading}
-            />
-            
-            <TextField 
-              label="Year of Establishment" 
-              name="year" 
-              variant="filled" 
-              required 
-              fullWidth 
-              value={formData.year} 
-              onChange={handleChange} 
-              InputLabelProps={{ style: { color: "#fff" } }} 
-              InputProps={{ style: { color: "#fff" } }}
-              disabled={loading}
-            />
-            
-            <TextField 
-              label="Stock Ticker Symbol" 
-              name="ticker" 
-              variant="filled" 
-              fullWidth 
-              value={formData.ticker} 
-              onChange={handleChange} 
-              InputLabelProps={{ style: { color: "#fff" } }} 
-              InputProps={{ style: { color: "#fff" } }}
-              disabled={loading}
-            />
-            
-            <TextField 
-              label="Relevant Links (optional)" 
-              name="links" 
-              variant="filled" 
-              fullWidth 
-              value={formData.links} 
-              onChange={handleChange} 
-              InputLabelProps={{ style: { color: "#fff" } }} 
-              InputProps={{ style: { color: "#fff" } }}
-              disabled={loading}
-            />
 
-            {/* Toggles */}
-            <FormControlLabel
-              control={
-                <Switch 
-                  checked={formData.isPublic} 
-                  onChange={handleChange} 
-                  name="isPublic" 
-                  color="secondary"
-                  disabled={loading}
-                />
-              }
-              label="Are you a publicly listed company?"
-              sx={{ color: "#fff" }}
-            />
-            
-            <FormControlLabel
-              control={
-                <Switch 
-                  checked={formData.isStartup} 
-                  onChange={handleChange} 
-                  name="isStartup" 
-                  color="secondary"
-                  disabled={loading}
-                />
-              }
-              label="Are you a startup?"
-              sx={{ color: "#fff" }}
-            />
+            <TextField name="revenue" label="Revenue (USD)" variant="filled" required fullWidth value={formData.revenue} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
+            <TextField name="employees" label="Number of Employees" variant="filled" required fullWidth value={formData.employees} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
+            <TextField name="year" label="Year of Establishment" variant="filled" required fullWidth value={formData.year} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
 
-            <Button
-              type="submit"
-              variant="contained"
-              color="secondary"
-              size="large"
-              disabled={loading}
-              sx={{
-                fontWeight: "bold",
-                padding: "12px",
-                mt: 2,
-                bgcolor: "#ff6f00",
-                '&:hover': { bgcolor: "#e65100" },
-                '&:disabled': { bgcolor: "#666" },
-              }}
-            >
-              {loading ? (
-                <>
-                  <CircularProgress size={24} sx={{ mr: 1, color: "#fff" }} />
-                  Analyzing...
-                </>
-              ) : (
-                "Analyze"
-              )}
+            {/* Show ticker field only if isPublic */}
+            {formData.isPublic && (
+              <TextField name="ticker" label="Stock Ticker Symbol" variant="filled" fullWidth value={formData.ticker} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
+            )}
+
+            <TextField name="links" label="Relevant Links (optional)" variant="filled" fullWidth value={formData.links} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
+
+            <FormControlLabel control={<Switch checked={formData.isPublic} onChange={handleChange} name="isPublic" color="secondary" disabled={loading} />} label="Are you a publicly listed company?" sx={{ color: "#fff" }} />
+            <FormControlLabel control={<Switch checked={formData.isStartup} onChange={handleChange} name="isStartup" color="secondary" disabled={loading} />} label="Are you a startup?" sx={{ color: "#fff" }} />
+
+            {/* Show pitch deck + contact info only if isStartup */}
+            {formData.isStartup && (
+              <>
+                <Button variant="outlined" component="label" sx={{ color: "#fff", borderColor: "#fff" }}>
+                  Upload Pitch Deck
+                  <input type="file" name="pitchDeck" hidden onChange={handleChange} />
+                </Button>
+                <TextField name="contactInfo" label="Contact Email" variant="filled" fullWidth value={formData.contactInfo} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
+              </>
+            )}
+
+            <Button type="submit" variant="contained" color="secondary" size="large" disabled={loading} sx={{ fontWeight: "bold", padding: "12px", mt: 2, bgcolor: "#ff6f00", '&:hover': { bgcolor: "#e65100" }, '&:disabled': { bgcolor: "#666" } }}>
+              {loading ? <><CircularProgress size={24} sx={{ mr: 1, color: "#fff" }} /> Analyzing...</> : "Analyze"}
             </Button>
           </Box>
         </GlassCard>
 
-        {/* Snackbar for notifications */}
-        <Snackbar
-          open={openSnackbar}
-          autoHideDuration={6000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-          <Alert 
-            onClose={handleCloseSnackbar} 
-            severity="error"
-            sx={{ width: '100%' }}
-          >
-            {error}
-          </Alert>
+        <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={() => setOpenSnackbar(false)} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+          <Alert severity="error" onClose={() => setOpenSnackbar(false)} sx={{ width: '100%' }}>{error}</Alert>
         </Snackbar>
 
-        {/* Results Modal */}
-        <AnalysisResultsModal 
-          open={showResultsModal}
-          onClose={handleCloseResultsModal}
-          analysisResult={analysisResult}
-        />
+        <AnalysisResultsModal open={showResultsModal} onClose={() => setShowResultsModal(false)} analysisResult={analysisResult} />
       </Container>
     </>
   );
