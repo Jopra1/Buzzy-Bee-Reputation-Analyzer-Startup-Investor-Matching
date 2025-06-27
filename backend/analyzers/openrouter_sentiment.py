@@ -1,9 +1,10 @@
 from openai import OpenAI
-from config import DEEPSEEK_API_KEY
+from config import OPENROUTER_API_KEY
 
-client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com",
+client = OpenAI(
+  base_url="https://openrouter.ai/api/v1",
+  api_key=OPENROUTER_API_KEY,
 )
-
 def analyze_sentiment(text_list):
     # Join list into a single string if needed
     if isinstance(text_list, list):
@@ -24,7 +25,7 @@ def analyze_sentiment(text_list):
     """
 
     response = client.chat.completions.create(
-        model="deepseek-chat",
+        model="deepseek/deepseek-r1",
         messages=[
             {"role": "user", "content": prompt}
         ],
@@ -32,4 +33,3 @@ def analyze_sentiment(text_list):
     )
 
     return response.choices[0].message.content
-
