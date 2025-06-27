@@ -1,34 +1,103 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from services.twitter_service import fetch_tweets
 from services.news_service import fetch_gnews_data, fetch_newsapi_data
-#from analyzers.gpt_sentiment import analyze_sentiment
 from analyzers.openrouter_sentiment import analyze_sentiment
 
 app = FastAPI()
 
+# Add CORS middleware to allow frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure this properly for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.post("/analyze")
 async def analyze(request: Request):
     body = await request.json()
-    query = body.get("query")
+    
+    # Extract all company information from the frontend
+    company_data = {
+        "companyName": body.get("companyName", ""),
+        "ceo": body.get("ceo", ""),
+        "country": body.get("country", ""),
+        "sector": body.get("sector", ""),
+        "revenue": body.get("revenue", ""),
+        "employees": body.get("employees", ""),
+        "year": body.get("year", ""),
+        "ticker": body.get("ticker", ""),
+        "links": body.get("links", ""),
+        "isPublic": body.get("isPublic", False),
+        "isStartup": body.get("isStartup", False)
+    }
+    
+    # Use company name as the primary query
+    query = company_data["companyName"]
+    
+    if not query:
+        return {"error": "Company name is required"}
 
-    # Fetch data from all sources
-    #tweets = fetch_tweets(query)
-    gnews = fetch_gnews_data(query).get("results", [])
-    newsapi = fetch_newsapi_data(query).get("results", [])
+    try:
+        # Fetch data from all sources
+        # tweets = fetch_tweets(query)  # Uncomment when Twitter API is ready
+        gnews = fetch_gnews_data(query).get("results", [])
+        newsapi = fetch_newsapi_data(query).get("results", [])
 
-    # Combine all texts for analysis
-    combined_texts = []
+        # Combine all texts for analysis
+        combined_texts = []
 
-    #combined_texts.extend(tweet["text"] for tweet in tweets if "text" in tweet)
-    combined_texts.extend(article["title"] + ". " + article.get("description", "")
-                          for article in gnews)
-    combined_texts.extend(article["title"] + ". " + article.get("description", "")
-                          for article in newsapi)
+        # Add CEO name to search if provided
+        if company_data["ceo"]:
+            ceo_gnews = fetch_gnews_data(company_data["ceo"]).get("results", [])
+            ceo_newsapi = fetch_newsapi_data(company_data["ceo"]).get("results", [])
+            gnews.extend(ceo_gnews)
+            newsapi.extend(ceo_newsapi)
 
-    # Pass all data to GPT
-    print("Combined: ", combined_texts)
-    result = analyze_sentiment(combined_texts)
+        # Process news articles with proper null handling
+        for article in gnews:
+            title = article.get("title", "") or ""
+            description = article.get("description", "") or ""
+            if title:  # Only add if title exists
+                combined_texts.append(title + ". " + description)
+        
+        for article in newsapi:
+            title = article.get("title", "") or ""
+            description = article.get("description", "") or ""
+            if title:  # Only add if title exists
+                combined_texts.append(title + ". " + description)
 
-    print("RESULT:" ,result)
+        # Filter out irrelevant content by checking if it mentions the company
+        # Also filter out empty texts
+        relevant_texts = []
+        company_name_lower = query.lower()
+        ceo_name_lower = company_data["ceo"].lower() if company_data["ceo"] else ""
+        
+        for text in combined_texts:
+            if text and text.strip():  # Check if text is not empty
+                text_lower = text.lower()
+                if (company_name_lower in text_lower or 
+                    (ceo_name_lower and ceo_name_lower in text_lower)):
+                    relevant_texts.append(text)
 
-    return {"result": result}
+        if not relevant_texts:
+            relevant_texts = combined_texts  # Fallback to all texts if no specific matches
+
+        print("Combined relevant texts: ", len(relevant_texts))
+        
+        # Pass company data and texts to sentiment analysis
+        result = analyze_sentiment(relevant_texts, company_data)
+
+        print("RESULT:", result)
+
+        return {"result": result, "company_info": company_data}
+        
+    except Exception as e:
+        print(f"Error during analysis: {str(e)}")
+        return {"error": f"Analysis failed: {str(e)}"}
+
+@app.get("/")
+async def root():
+    return {"message": "Company Reputation Analysis API is running"}

@@ -1,7 +1,7 @@
 from openai import OpenAI
-from config import DEEPSEEK_API_KEY
+from config import OPENROUTER_API_KEY
 
-client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com",
+client = OpenAI(api_key=OPENROUTER_API_KEY, base_url="https://api.deepseek.com",
 )
 
 def analyze_sentiment(text_list):

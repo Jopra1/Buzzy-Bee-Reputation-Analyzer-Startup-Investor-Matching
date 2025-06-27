@@ -9,11 +9,11 @@ result = "[{'created_at': '2025-06-27T10:29:50.000Z', 'text': 'RT @codewithsushi
 def create_headers():
     return {"Authorization": f"Bearer {BEARER_TOKEN}"}
 
-def fetch_tweets(query, max_results=20):
-    return result
+'''def fetch_tweets(query, max_results=20):
+    return result'''
 
 
-def fetch_tweetss(query, max_results=20):
+def fetch_tweets(query, max_results=5):
     url = "https://api.twitter.com/2/tweets/search/recent"
     headers = create_headers()
     params = {
