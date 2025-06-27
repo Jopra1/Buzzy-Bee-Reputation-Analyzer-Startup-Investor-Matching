@@ -1,7 +1,8 @@
 import React from "react";
 import { Container, Grid, Link, Stack, Button, Typography, AppBar, Toolbar, Box } from "@mui/material";
-import { Twitter, Facebook, Instagram, Menu as MenuIcon } from "@mui/icons-material";
+import { Twitter, Instagram, Menu as MenuIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import GitHubIcon from '@mui/icons-material/GitHub';
 import bgImage from "../assets/stock-bg.jpg"; // replace with your image
 
 const Header = () => {
@@ -19,24 +20,25 @@ const Header = () => {
         }}
       >
         <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Typography variant="h6" color="white" sx={{ fontWeight: 'bold', fontSize: '1.8rem' }}>
-            RepCheck-360
+          <Typography variant="h6" color="Yellow" sx={{ fontWeight: 'bold', fontSize: '1.8rem',textShadow: '0 0 10px rgba(255,215,0,0.5)' }} >
+            BUZZY BEE
           </Typography>
           <Stack direction="row" spacing={2} alignItems="center">
-            <Link href="/" color="white" underline="none" sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
-              NIL
-            </Link>
-            <Link href="/startup" color="white" underline="none" sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
-              NIL
-            </Link>
-            <Link href="/investor" color="white" underline="none" sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
-              NIL
-            </Link>
+           
             <MenuIcon sx={{ display: { xs: "block", md: "none" }, color: 'white' }} />
             <Stack direction="row" spacing={1} sx={{ display: { xs: "none", md: "flex" } }}>
-              <Twitter color="inherit" />
-              <Facebook color="inherit" />
-              <Instagram color="inherit" />
+              
+                <Link
+    href="https://github.com/Shivsay/Eden4_Identifier_Expected" // Replace with your actual GitHub URL
+    target="_blank"
+    rel="noopener"
+    color="inherit"
+    underline="none"
+    sx={{ display: 'flex', alignItems: 'center' }}
+  >
+    <GitHubIcon color="inherit" />
+  </Link>
+             
             </Stack>
           </Stack>
         </Toolbar>
