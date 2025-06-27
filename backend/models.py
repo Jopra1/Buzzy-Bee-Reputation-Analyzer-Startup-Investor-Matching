@@ -14,6 +14,8 @@ class CompanyInfo(BaseModel):
     ticker: Optional[str] = None
     links: Optional[str] = None
 
+    funding_range: Optional[str] = None
+
     isPublic: Optional[bool] = False
     isStartup: Optional[bool] = False
 
