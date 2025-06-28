@@ -97,7 +97,7 @@ const CompanyForm = () => {
     links: "",
     isPublic: false,
     isStartup: false,
-    pitchDeck: null,
+    pitchDeck: "", // 👈 NEW FIELD
     contactInfo: "",
     fundingRange: "",
   });
@@ -109,10 +109,10 @@ const CompanyForm = () => {
   const [showResultsModal, setShowResultsModal] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : type === "file" ? files[0] : value,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -130,13 +130,10 @@ const CompanyForm = () => {
     setAnalysisResult(null);
 
     try {
-      const payload = { ...formData };
-      delete payload.pitchDeck;
-
       const response = await fetch("http://localhost:8000/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -228,10 +225,25 @@ const CompanyForm = () => {
                   </Select>
                 </FormControl>
 
-                <Button variant="outlined" component="label" sx={{ color: "#fff", borderColor: "#fff" }}>
-                  Upload Pitch Deck
-                  <input type="file" name="pitchDeck" hidden onChange={handleChange} />
-                </Button>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight="bold" color="#fff" mb={1}>
+                    Pitch Deck
+                  </Typography>
+                  <TextField
+                    name="pitchDeck"
+                    placeholder="Provide a short summary of your startup idea, product, or service."
+                    multiline
+                    rows={5}
+                    fullWidth
+                    variant="filled"
+                    value={formData.pitchDeck}
+                    onChange={handleChange}
+                    InputLabelProps={{ style: { color: "#fff" } }}
+                    InputProps={{ style: { color: "#fff" } }}
+                    disabled={loading}
+                  />
+                </Box>
+
                 <TextField name="contactInfo" label="Contact Email" variant="filled" fullWidth value={formData.contactInfo} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
               </>
             )}
