@@ -61,6 +61,17 @@ const sectors = [
   "Other",
 ];
 
+const fundingRanges = [
+  "Less than 1 Cr",
+  "1 - 5 Cr",
+  "5 - 10 Cr",
+  "10 - 50 Cr",
+  "50 - 100 Cr",
+  "100 - 500 Cr",
+  "500 - 1000 Cr",
+  "1000+ Cr",
+];
+
 const CompanyForm = () => {
   const navigate = useNavigate();
 
@@ -78,6 +89,7 @@ const CompanyForm = () => {
     isStartup: false,
     pitchDeck: null,
     contactInfo: "",
+    fundingRange: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -109,7 +121,7 @@ const CompanyForm = () => {
 
     try {
       const payload = { ...formData };
-      delete payload.pitchDeck; // File should be uploaded separately if needed
+      delete payload.pitchDeck;
 
       const response = await fetch("http://localhost:8000/analyze", {
         method: "POST",
@@ -137,7 +149,6 @@ const CompanyForm = () => {
       <CssBaseline />
       <BackgroundWrapper />
 
-      {/* 🔙 Back Button */}
       <Button
         onClick={() => navigate("/choose-role")}
         sx={{
@@ -178,7 +189,6 @@ const CompanyForm = () => {
             <TextField name="employees" label="Number of Employees" variant="filled" required fullWidth value={formData.employees} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
             <TextField name="year" label="Year of Establishment" variant="filled" required fullWidth value={formData.year} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
 
-            {/* Show ticker field only if isPublic */}
             {formData.isPublic && (
               <TextField name="ticker" label="Stock Ticker Symbol" variant="filled" fullWidth value={formData.ticker} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
             )}
@@ -188,9 +198,17 @@ const CompanyForm = () => {
             <FormControlLabel control={<Switch checked={formData.isPublic} onChange={handleChange} name="isPublic" color="secondary" disabled={loading} />} label="Are you a publicly listed company?" sx={{ color: "#fff" }} />
             <FormControlLabel control={<Switch checked={formData.isStartup} onChange={handleChange} name="isStartup" color="secondary" disabled={loading} />} label="Are you a startup?" sx={{ color: "#fff" }} />
 
-            {/* Show pitch deck + contact info only if isStartup */}
             {formData.isStartup && (
               <>
+                <FormControl fullWidth variant="filled">
+                  <InputLabel sx={{ color: "#fff" }}>Funding Range</InputLabel>
+                  <Select name="fundingRange" value={formData.fundingRange} onChange={handleChange} sx={{ color: "#fff" }} disabled={loading}>
+                    {fundingRanges.map((range, i) => (
+                      <MenuItem key={i} value={range}>{range}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
                 <Button variant="outlined" component="label" sx={{ color: "#fff", borderColor: "#fff" }}>
                   Upload Pitch Deck
                   <input type="file" name="pitchDeck" hidden onChange={handleChange} />

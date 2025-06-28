@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Container,
   Typography,
@@ -11,6 +11,9 @@ import {
   Button,
   CssBaseline,
   Paper,
+  Card,
+  CardContent,
+  CircularProgress,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -91,16 +94,32 @@ const InvestorSearch = () => {
   const [funding, setFunding] = useState("");
   const [employees, setEmployees] = useState("");
   const [country, setCountry] = useState(null);
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = () => {
-    console.log("Investor Filters:", {
-      sector,
-      funding,
-      employees,
-      country: country?.label || "",
-    });
-    // TODO: Fetch matching companies
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:8000/search-investment-opportunities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sector,
+          fundingRange: funding,
+          employeeRange: employees,
+          country: country?.label || "",
+        }),
+      });
+
+      const data = await response.json();
+      console.log("API response:", data);
+      setResults(data.results || []); // Adjust this if your key is different
+    } catch (err) {
+      alert("Error fetching companies: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -133,15 +152,9 @@ const InvestorSearch = () => {
             <Grid item xs={12}>
               <FormControl fullWidth variant="filled">
                 <InputLabel sx={{ color: "#fff" }}>Sector</InputLabel>
-                <Select
-                  value={sector}
-                  onChange={(e) => setSector(e.target.value)}
-                  sx={{ color: "#fff" }}
-                >
+                <Select value={sector} onChange={(e) => setSector(e.target.value)} sx={{ color: "#fff" }}>
                   {sectors.map((item, i) => (
-                    <MenuItem key={i} value={item}>
-                      {item}
-                    </MenuItem>
+                    <MenuItem key={i} value={item}>{item}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -150,15 +163,9 @@ const InvestorSearch = () => {
             <Grid item xs={12}>
               <FormControl fullWidth variant="filled">
                 <InputLabel sx={{ color: "#fff" }}>Funding Range</InputLabel>
-                <Select
-                  value={funding}
-                  onChange={(e) => setFunding(e.target.value)}
-                  sx={{ color: "#fff" }}
-                >
+                <Select value={funding} onChange={(e) => setFunding(e.target.value)} sx={{ color: "#fff" }}>
                   {fundingRanges.map((item, i) => (
-                    <MenuItem key={i} value={item}>
-                      {item}
-                    </MenuItem>
+                    <MenuItem key={i} value={item}>{item}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -167,15 +174,9 @@ const InvestorSearch = () => {
             <Grid item xs={12}>
               <FormControl fullWidth variant="filled">
                 <InputLabel sx={{ color: "#fff" }}>Employee Range</InputLabel>
-                <Select
-                  value={employees}
-                  onChange={(e) => setEmployees(e.target.value)}
-                  sx={{ color: "#fff" }}
-                >
+                <Select value={employees} onChange={(e) => setEmployees(e.target.value)} sx={{ color: "#fff" }}>
                   {employeeRanges.map((item, i) => (
-                    <MenuItem key={i} value={item}>
-                      {item}
-                    </MenuItem>
+                    <MenuItem key={i} value={item}>{item}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -210,12 +211,39 @@ const InvestorSearch = () => {
                   '&:hover': { bgcolor: "#008ba3" },
                 }}
                 onClick={handleSubmit}
+                disabled={loading}
               >
-                Search Companies
+                {loading ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : "Search Companies"}
               </Button>
             </Grid>
           </Grid>
         </GlassCard>
+
+        {/* Display Results */}
+        {results.length > 0 && (
+          <Box mt={6}>
+            <Typography variant="h5" fontWeight="bold" color="white" mb={2}>
+              Matching Startups
+            </Typography>
+            {results.map((company, index) => (
+              <Card key={index} sx={{ mb: 2, bgcolor: "#1e1e2f", color: "#fff" }}>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="bold">{company.companyName}</Typography>
+                  <Typography>Sector: {company.sector}</Typography>
+                  <Typography>Country: {company.country}</Typography>
+                  <Typography>Employees: {company.employees}</Typography>
+                  <Typography>Funding Needed: {company.fundingRange}</Typography>
+                  {company.contactInfo && <Typography>Contact: {company.contactInfo}</Typography>}
+                  {company.links && (
+                    <Typography>
+                      Website: <a href={company.links} target="_blank" rel="noopener noreferrer" style={{ color: "#90caf9" }}>{company.links}</a>
+                    </Typography>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        )}
       </Container>
     </>
   );
