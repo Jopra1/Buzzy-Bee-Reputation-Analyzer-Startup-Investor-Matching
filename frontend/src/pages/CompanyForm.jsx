@@ -72,6 +72,16 @@ const fundingRanges = [
   "1000+ Cr",
 ];
 
+const employeeRanges = [
+  "Less than 10",
+  "10 - 50",
+  "51 - 200",
+  "201 - 500",
+  "501 - 1000",
+  "1001 - 5000",
+  "5001+",
+];
+
 const CompanyForm = () => {
   const navigate = useNavigate();
 
@@ -186,7 +196,16 @@ const CompanyForm = () => {
             </FormControl>
 
             <TextField name="revenue" label="Revenue (USD)" variant="filled" required fullWidth value={formData.revenue} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
-            <TextField name="employees" label="Number of Employees" variant="filled" required fullWidth value={formData.employees} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
+
+            <FormControl fullWidth variant="filled">
+              <InputLabel sx={{ color: "#fff" }}>Number of Employees</InputLabel>
+              <Select name="employees" value={formData.employees} onChange={handleChange} sx={{ color: "#fff" }} disabled={loading}>
+                {employeeRanges.map((range, i) => (
+                  <MenuItem key={i} value={range}>{range}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
             <TextField name="year" label="Year of Establishment" variant="filled" required fullWidth value={formData.year} onChange={handleChange} InputLabelProps={{ style: { color: "#fff" } }} InputProps={{ style: { color: "#fff" } }} disabled={loading} />
 
             {formData.isPublic && (
