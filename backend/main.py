@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Form, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from services.twitter_service import fetch_tweets
 from services.news_service import fetch_gnews_data, fetch_newsapi_data
@@ -187,7 +187,7 @@ def get_sector_keywords(sector):
 async def root():
     return {"message": "Company Analysis API - Ready", "status": "running"}
 
-@app.post("/search-investment-opportunities"):
+@app.post("/search-investment-opportunities")
 async def search_investments(request: Request):
     body = await request.json()
     sector = body.get("sector")
