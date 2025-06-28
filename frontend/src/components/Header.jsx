@@ -3,7 +3,7 @@ import { Container, Grid, Link, Stack, Button, Typography, AppBar, Toolbar, Box,
 import { Menu as MenuIcon, Close, LinkedIn, GitHub, Email } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import bgImage from "../assets/stock-bg.jpg";
-
+import bbLogo from "../assets/bb-logo.png"; // Replace with your BB logo image path
 
 // Import team member images
 import adhithyaImg from "../assets/adhithya.jpg"; // Replace with actual path
@@ -67,13 +67,24 @@ const Header = () => {
       >
         <Toolbar sx={{ justifyContent: "space-between" }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="h6" color="#FFD700" sx={{ 
-              fontWeight: 'bold', 
-              fontSize: '1.8rem',
-              textShadow: '0 0 10px rgba(255,215,0,0.5)' 
-            }}>
-              BUZZY BEE
-            </Typography>
+            <img 
+              src={bbLogo} 
+              alt="BB Logo" 
+              style={{
+                height: '60px',
+                width: 'auto',
+                filter: 'drop-shadow(0 0 10px rgba(255,215,0,0.5))',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.transform = 'scale(1.1)';
+                e.target.style.filter = 'drop-shadow(0 0 15px rgba(255,215,0,0.8))';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.transform = 'scale(1)';
+                e.target.style.filter = 'drop-shadow(0 0 10px rgba(255,215,0,0.5))';
+              }}
+            />
           </Box>
           <Stack direction="row" spacing={2} alignItems="center">
             <MenuIcon sx={{ display: { xs: "block", md: "none" }, color: 'white' }} />
