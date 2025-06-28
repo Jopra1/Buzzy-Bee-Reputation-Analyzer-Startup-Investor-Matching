@@ -8,7 +8,7 @@ class CompanyInfo(BaseModel):
 
     sector: str
     revenue: Optional[float] = None
-    employees: int
+    employees: str
     year: Optional[int] = None
 
     ticker: Optional[str] = None
@@ -18,4 +18,7 @@ class CompanyInfo(BaseModel):
 
     isPublic: Optional[bool] = False
     isStartup: Optional[bool] = False
+
+    email: Optional[str] = None
+
 
