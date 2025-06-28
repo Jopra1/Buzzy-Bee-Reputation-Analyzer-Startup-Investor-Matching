@@ -51,7 +51,7 @@ async def analyze_company(request: Request):
             except Exception as e:
                 print(f"DB error: {e}")
 
-        return "success"
+        #return "success"
 
         # Fetch data from all sources concurrently
         combined_texts = []
