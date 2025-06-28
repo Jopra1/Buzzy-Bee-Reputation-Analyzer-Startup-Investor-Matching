@@ -242,6 +242,7 @@ const InvestorSearch = () => {
                   <Typography>Revenue: ₹{company.revenue} Cr</Typography>
                   <Typography>Year Founded: {company.year}</Typography>
                   <Typography>E-Mail: {company.email  || "N/A"}</Typography>
+                  <Typography>Pitch Deck: {company.pitchDeck  || "N/A"}</Typography>
                   
                   {company.links && (
                     <Typography>

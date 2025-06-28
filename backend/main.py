@@ -35,7 +35,8 @@ async def analyze_company(request: Request):
             "funding_range": data.get("fundingRange", "").strip(),
             "isPublic": data.get("isPublic", False),
             "isStartup": data.get("isStartup", False),
-            "email": data.get("contactInfo", "")
+            "email": data.get("contactInfo", ""),
+            "pitchDeck": data.get("pitchDeck", "")
         }
         
         if not company_data["companyName"]:
@@ -51,7 +52,8 @@ async def analyze_company(request: Request):
             except Exception as e:
                 print(f"DB error: {e}")
 
-        #return "success"
+        #uncomment to add to database
+        return "success"
 
         # Fetch data from all sources concurrently
         combined_texts = []

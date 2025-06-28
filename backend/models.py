@@ -21,4 +21,6 @@ class CompanyInfo(BaseModel):
 
     email: Optional[str] = None
 
+    pitchDeck: Optional[str] = None
+
 
