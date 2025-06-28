@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Form, File, UploadFile, HTTPException
+from fastapi import FastAPI, Form, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from services.twitter_service import fetch_tweets
 from services.news_service import fetch_gnews_data, fetch_newsapi_data
@@ -49,6 +49,8 @@ async def analyze_company(request: Request):
                     print(f"✅ Stored startup: {company_data['companyName']}")
             except Exception as e:
                 print(f"DB error: {e}")
+
+        #return "success"
 
         # Fetch data from all sources concurrently
         combined_texts = []
