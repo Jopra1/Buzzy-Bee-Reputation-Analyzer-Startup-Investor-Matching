@@ -80,13 +80,18 @@ const Background = styled("div")({
 });
 
 const GlassCard = styled(Paper)(({ theme }) => ({
-  backdropFilter: "blur(12px)",
-  background: "rgba(255, 255, 255, 0.1)",
+  backdropFilter: "blur(15px)",
+  background: "rgba(255, 255, 255, 0.08)",
   borderRadius: theme.spacing(3),
   boxShadow: "0 8px 32px 0 rgba(0, 191, 255, 0.4)",
   color: "#fff",
-  padding: theme.spacing(4),
-  border: "1px solid rgba(255, 255, 255, 0.2)",
+  padding: theme.spacing(3),
+  border: "1px solid rgba(255, 255, 255, 0.3)",
+  transition: "transform 0.3s ease",
+  '&:hover': {
+    transform: "scale(1.02)",
+    boxShadow: "0 0 30px rgba(0, 255, 255, 0.3)",
+  },
 }));
 
 const InvestorSearch = () => {
@@ -114,7 +119,7 @@ const InvestorSearch = () => {
 
       const data = await response.json();
       console.log("API response:", data);
-      setResults(data.results || []); // Adjust this if your key is different
+      setResults(data.matches || []);
     } catch (err) {
       alert("Error fetching companies: " + err.message);
     } finally {
@@ -226,21 +231,33 @@ const InvestorSearch = () => {
               Matching Startups
             </Typography>
             {results.map((company, index) => (
-              <Card key={index} sx={{ mb: 2, bgcolor: "#1e1e2f", color: "#fff" }}>
+              <GlassCard key={index} sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight="bold">{company.companyName}</Typography>
+                  <Typography>CEO: {company.ceo || "N/A"}</Typography>
                   <Typography>Sector: {company.sector}</Typography>
                   <Typography>Country: {company.country}</Typography>
                   <Typography>Employees: {company.employees}</Typography>
-                  <Typography>Funding Needed: {company.fundingRange}</Typography>
-                  {company.contactInfo && <Typography>Contact: {company.contactInfo}</Typography>}
+                  <Typography>Funding Needed: {company.funding_range}</Typography>
+                  <Typography>Revenue: ₹{company.revenue} Cr</Typography>
+                  <Typography>Year Founded: {company.year}</Typography>
+                  <Typography>E-Mail: {company.email  || "N/A"}</Typography>
+                  
                   {company.links && (
                     <Typography>
-                      Website: <a href={company.links} target="_blank" rel="noopener noreferrer" style={{ color: "#90caf9" }}>{company.links}</a>
+                      Website:{" "}
+                      <a
+                        href={company.links}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "#90caf9" }}
+                      >
+                        {company.links}
+                      </a>
                     </Typography>
                   )}
                 </CardContent>
-              </Card>
+              </GlassCard>
             ))}
           </Box>
         )}
