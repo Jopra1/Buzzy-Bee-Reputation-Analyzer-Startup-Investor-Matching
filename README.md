@@ -4,7 +4,7 @@
 - **AI-Powered Reputation Analysis** for businesses
 - **Startup Finder** for connecting startups with investors
 
-This project delivers real-time reputation scores and actionable insights for companies while facilitating smart investor-startup matching — all within a user-friendly web application.
+This project delivers real-time reputation scores and actionable insights for companies while facilitating smart investor-startup matching, all within a user-friendly web application.
 
 ---
 
